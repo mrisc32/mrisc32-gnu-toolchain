@@ -21,6 +21,38 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ##############################################################################
 
-# TODO(m): Implement this!
-echo "Hello world!"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd "$SCRIPT_DIR"
+
+# Install dependencies.
+# TODO(m): Implement me!
+
+# Update the git submodules.
+git submodule update --init --recursive
+
+# Start clean.
+mkdir -p out
+rm -rf out/*
+mkdir -p out/install
+
+INSTALL_PREFIX="$PWD/out/install"
+
+# Build binutils.
+mkdir -p out/binutils
+cd out/binutils
+../../ext/binutils-mrisc32/configure \
+  --prefix="$INSTALL_PREFIX" \
+  --target=mrisc32 \
+  --program-prefix=mrisc32-elf- \
+  --with-system-zlib \
+  --disable-gdb \
+  --disable-sim
+make && make install
+cd ../..
+
+# Build gcc.
+mkdir -p out/gcc
+cd out/gcc
+# TODO(m): Implement me!
+cd ../..
 
