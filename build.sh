@@ -24,7 +24,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$SCRIPT_DIR"
 
-# Install dependencies.
+# Check dependencies.
 # TODO(m): Implement me!
 
 # Update the git submodules.
@@ -33,15 +33,17 @@ git submodule update --init --recursive
 # Start clean.
 mkdir -p out
 rm -rf out/*
-mkdir -p out/install
 
-INSTALL_PREFIX="$PWD/out/install"
+# Create the install root.
+INSTALL_ROOT="$PWD/out/install"
+mkdir -p "$INSTALL_ROOT"
+PATH="$INSTALL_ROOT/bin:$PATH"
 
 # Build binutils.
 mkdir -p out/binutils
 cd out/binutils
 ../../ext/binutils-mrisc32/configure \
-  --prefix="$INSTALL_PREFIX" \
+  --prefix="$INSTALL_ROOT" \
   --target=mrisc32 \
   --program-prefix=mrisc32-elf- \
   --with-system-zlib \
@@ -50,9 +52,17 @@ cd out/binutils
 make && make install
 cd ../..
 
-# Build gcc.
+# Build a minimal gcc.
 mkdir -p out/gcc
 cd out/gcc
-# TODO(m): Implement me!
+../../ext/gcc-mrisc32/configure \
+  --prefix="$INSTALL_ROOT" \
+  --target=mrisc32-elf \
+  --program-prefix=mrisc32-elf- \
+  --enable-languages=c \
+  --disable-libssp \
+  --disable-libquadmath \
+  --without-newlib
+make -j20 && make install
 cd ../..
 
