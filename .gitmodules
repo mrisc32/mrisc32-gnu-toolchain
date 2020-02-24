@@ -1,0 +1,9 @@
+[submodule "ext/binutils-mrisc32"]
+	path = ext/binutils-mrisc32
+	url = ../binutils-mrisc32
+[submodule "ext/gcc-mrisc32"]
+	path = ext/gcc-mrisc32
+	url = ../gcc-mrisc32
+[submodule "ext/newlib-mrisc32"]
+	path = ext/newlib-mrisc32
+	url = ../newlib-mrisc32
