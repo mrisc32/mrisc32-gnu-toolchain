@@ -1,7 +1,15 @@
-# toolchain-mrisc32
-
-**NOTE:** This is still work in progress.
+# MRISC32 GNU toolchain
 
 This is a top level repository for building the MRISC32 toolchain.
 
-The idea is to automate the build of the MRISC32 GCC toolchain.
+**NOTE:** This is still work in progress.
+
+## Prerequities
+
+TBD
+
+# Building
+
+```
+./build.sh
+```
