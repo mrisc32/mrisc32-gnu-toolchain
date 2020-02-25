@@ -11,5 +11,5 @@ TBD
 # Building
 
 ```
-./build.sh
+./build.sh --clean --update
 ```

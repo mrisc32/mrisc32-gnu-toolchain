@@ -24,15 +24,31 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$SCRIPT_DIR"
 
+# Parse arguments.
+DO_CLEAN=no
+DO_UPDATE=no
+for arg in "$@" ; do
+    if [ "$arg" == "--clean" ] ; then
+        DO_CLEAN=yes
+    fi
+    if [ "$arg" == "--update" ] ; then
+        DO_UPDATE=yes
+    fi
+done
+
 # Check dependencies.
 # TODO(m): Implement me!
 
 # Update the git submodules.
-git submodule update --init --recursive
+if [ "$DO_UPDATE" == "yes" ] ; then
+    git submodule update --init --recursive
+fi
 
-# Start clean.
-mkdir -p out
-rm -rf out/*
+# Clean all the build results.
+if [ "$DO_CLEAN" == "yes" ] ; then
+    mkdir -p out
+    rm -rf out/*
+fi
 
 # Create the install root.
 INSTALL_ROOT="$PWD/out/install"
@@ -43,12 +59,12 @@ PATH="$INSTALL_ROOT/bin:$PATH"
 mkdir -p out/binutils
 cd out/binutils
 ../../ext/binutils-mrisc32/configure \
-  --prefix="$INSTALL_ROOT" \
-  --target=mrisc32 \
-  --program-prefix=mrisc32-elf- \
-  --with-system-zlib \
-  --disable-gdb \
-  --disable-sim
+    --prefix="$INSTALL_ROOT" \
+    --target=mrisc32 \
+    --program-prefix=mrisc32-elf- \
+    --with-system-zlib \
+    --disable-gdb \
+    --disable-sim
 make && make install
 cd ../..
 
