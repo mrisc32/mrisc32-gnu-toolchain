@@ -45,8 +45,8 @@ if [ "$DO_UPDATE" == "yes" ] ; then
 fi
 
 # Clean all the build results.
+mkdir -p out
 if [ "$DO_CLEAN" == "yes" ] ; then
-    mkdir -p out
     rm -rf out/*
 fi
 
@@ -55,30 +55,73 @@ INSTALL_ROOT="$PWD/out/install"
 mkdir -p "$INSTALL_ROOT"
 PATH="$INSTALL_ROOT/bin:$PATH"
 
+# Toolchain configuration.
+TARGET=mrisc32-elf
+
+#
+# This is inspired by http://www.ifp.illinois.edu/~nakazato/tips/xgcc.html
+#
+
+set -e
+
 # Build binutils.
+echo "====> Building binutils"
 mkdir -p out/binutils
 cd out/binutils
 ../../ext/binutils-mrisc32/configure \
     --prefix="$INSTALL_ROOT" \
-    --target=mrisc32 \
-    --program-prefix=mrisc32-elf- \
+    --target="$TARGET" \
     --with-system-zlib \
     --disable-gdb \
-    --disable-sim
-make && make install
+    --disable-sim \
+    > configure.log 2>&1
+make all > build.log 2>&1
+make install > install.log 2>&1
 cd ../..
 
-# Build a minimal gcc.
+# Build bootstrap gcc.
+echo "====> Building bootstrap GCC"
+mkdir -p out/gcc-bootstrap
+cd out/gcc-bootstrap
+../../ext/gcc-mrisc32/configure \
+  --prefix="$INSTALL_ROOT" \
+  --target="$TARGET" \
+  --enable-languages=c \
+  --without-headers \
+  --with-newlib \
+  --with-gnu-as \
+  --with-gnu-ld \
+  > configure.log 2>&1
+make -j20 all-gcc > build.log 2>&1
+make install-gcc > install.log 2>&1
+cd ../..
+
+# Build newlib.
+echo "====> Building newlib"
+mkdir -p out/newlib
+cd out/newlib
+../../ext/newlib-mrisc32/configure \
+  --prefix="$INSTALL_ROOT" \
+  --target="$TARGET" \
+  > configure.log 2>&1
+make -j20 all > build.log 2>&1
+make install > install.log 2>&1
+cd ../..
+
+# Build gcc with newlib.
+echo "====> Building GCC"
 mkdir -p out/gcc
 cd out/gcc
 ../../ext/gcc-mrisc32/configure \
   --prefix="$INSTALL_ROOT" \
-  --target=mrisc32-elf \
-  --program-prefix=mrisc32-elf- \
+  --target="$TARGET" \
   --enable-languages=c \
+  --with-newlib \
+  --with-gnu-as \
+  --with-gnu-ld \
+  --disable-shared \
   --disable-libssp \
-  --disable-libquadmath \
-  --without-newlib
-make -j20 && make install
-cd ../..
+  > configure.log 2>&1
+make -j20 all > build.log 2>&1
+make install > install.log 2>&1
 
