@@ -182,3 +182,9 @@ if [ "$BUILD_GCC" == "yes" ] ; then
     cd ../..
 fi
 
+# Pack it all into a tar file.
+echo "====> Creating tarball"
+cd out/install
+tar -caf ../mrisc32-gnu-toolchain.tar.gz ./*
+cd ../..
+
