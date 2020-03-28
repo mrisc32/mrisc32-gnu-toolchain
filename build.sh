@@ -21,6 +21,12 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ##############################################################################
 
+err_report() {
+    echo "*** Failed to build: Stopped on line $1"
+}
+trap 'err_report $LINENO' ERR
+set -e
+
 function help {
     echo "Usage: $0 [options]"
     echo "Options:"
@@ -110,8 +116,6 @@ TARGET=mrisc32-elf
 # This is inspired by http://www.ifp.illinois.edu/~nakazato/tips/xgcc.html
 #
 
-set -e
-
 # Build binutils.
 if [ "$BUILD_BINUTILS" == "yes" ] ; then
     echo "====> Building binutils"
@@ -187,4 +191,7 @@ echo "====> Creating tarball"
 cd out/install
 tar -caf ../mrisc32-gnu-toolchain.tar.gz ./*
 cd ../..
+
+
+echo "Completed successfuly!"
 
