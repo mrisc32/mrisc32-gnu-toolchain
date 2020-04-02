@@ -28,63 +28,86 @@ trap 'err_report $LINENO' ERR
 set -e
 
 function help {
-    echo "Usage: $0 [options]"
+    echo "Usage: $0 [options] [component]"
+    echo ""
+    echo "Build and install the MRISC32 GNU toolchain."
+    echo ""
     echo "Options:"
-    echo "  --help     Show this text"
-    echo "  --clean    Clean all the output folders"
-    echo "  --update   Update the Git submodules"
-    echo "  all        Build all components (default)"
-    echo "  binutils   Build only binutils"
-    echo "  bootstrap  Build only the bootstrap version of GCC (requires binutils)"
-    echo "  newlib     Build only newlib (requires bootstrap)"
-    echo "  gcc        Build only GCC (requires newlib)"
+    echo "  --prefix=PATH  Set installation path (default: $HOME/.local)"
+    echo "  -c, --clean    Clean the build directories"
+    echo "  -u, --update   Update the Git submodules"
+    echo "  -h, --help     Show this text"
+    echo ""
+    echo "Component:"
+    echo "  all            Build all components (default)"
+    echo "  binutils       Build only binutils"
+    echo "  bootstrap      Build only the bootstrap version of GCC"
+    echo "                   (requires binutils)"
+    echo "  newlib         Build only newlib"
+    echo "                   (requires bootstrap)"
+    echo "  gcc            Build only GCC"
+    echo "                   (requires newlib)"
 }
 
 # Parse arguments.
 DO_CLEAN=no
 DO_UPDATE=no
+PREFIX="$HOME/.local"
 BUILD_BINUTILS=yes
 BUILD_BOOTSTRAP=yes
 BUILD_NEWLIB=yes
 BUILD_GCC=yes
 for arg in "$@" ; do
-    if [ "$arg" == "--help" ] ; then
-        help
-        exit 0
-    elif [ "$arg" == "--clean" ] ; then
-        DO_CLEAN=yes
-    elif [ "$arg" == "--update" ] ; then
-        DO_UPDATE=yes
-    elif [ "$arg" == "all" ] ; then
-        BUILD_BINUTILS=yes
-        BUILD_BOOTSTRAP=yes
-        BUILD_NEWLIB=yes
-        BUILD_GCC=yes
-    elif [ "$arg" == "binutils" ] ; then
-        BUILD_BINUTILS=yes
-        BUILD_BOOTSTRAP=no
-        BUILD_NEWLIB=no
-        BUILD_GCC=no
-    elif [ "$arg" == "bootstrap" ] ; then
-        BUILD_BINUTILS=no
-        BUILD_BOOTSTRAP=yes
-        BUILD_NEWLIB=no
-        BUILD_GCC=no
-    elif [ "$arg" == "newlib" ] ; then
-        BUILD_BINUTILS=no
-        BUILD_BOOTSTRAP=no
-        BUILD_NEWLIB=yes
-        BUILD_GCC=no
-    elif [ "$arg" == "gcc" ] ; then
-        BUILD_BINUTILS=no
-        BUILD_BOOTSTRAP=no
-        BUILD_NEWLIB=no
-        BUILD_GCC=yes
-    else
-        echo "*** Invalid argument: $arg"
-        help
-        exit 1
-    fi
+    case $arg in
+        -h|--help)
+            help
+            exit 0
+            ;;
+        -c|--clean)
+            DO_CLEAN=yes
+            ;;
+        -u|--update)
+            DO_UPDATE=yes
+            ;;
+        --prefix=*)
+            PREFIX="${arg#*=}"
+            ;;
+        all)
+            BUILD_BINUTILS=yes
+            BUILD_BOOTSTRAP=yes
+            BUILD_NEWLIB=yes
+            BUILD_GCC=yes
+            ;;
+        binutils)
+            BUILD_BINUTILS=yes
+            BUILD_BOOTSTRAP=no
+            BUILD_NEWLIB=no
+            BUILD_GCC=no
+            ;;
+        bootstrap)
+            BUILD_BINUTILS=no
+            BUILD_BOOTSTRAP=yes
+            BUILD_NEWLIB=no
+            BUILD_GCC=no
+            ;;
+        newlib)
+            BUILD_BINUTILS=no
+            BUILD_BOOTSTRAP=no
+            BUILD_NEWLIB=yes
+            BUILD_GCC=no
+            ;;
+        gcc)
+            BUILD_BINUTILS=no
+            BUILD_BOOTSTRAP=no
+            BUILD_NEWLIB=no
+            BUILD_GCC=yes
+            ;;
+        *)
+            echo "*** Invalid argument: $arg"
+            help
+            exit 1
+            ;;
+    esac
 done
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -104,10 +127,10 @@ if [ "$DO_CLEAN" == "yes" ] ; then
     rm -rf out/*
 fi
 
-# Create the install root.
-INSTALL_ROOT="$PWD/out/install"
-mkdir -p "$INSTALL_ROOT"
-PATH="$INSTALL_ROOT/bin:$PATH"
+# Create the install root ($PREFIX), and make sure that it's the first in our
+# PATH during installation.
+mkdir -p "$PREFIX"
+PATH="$PREFIX/bin:$PATH"
 
 # Toolchain configuration.
 TARGET=mrisc32-elf
@@ -118,28 +141,32 @@ TARGET=mrisc32-elf
 
 # Build binutils.
 if [ "$BUILD_BINUTILS" == "yes" ] ; then
-    echo "====> Building binutils"
+    echo "==[ binutils - $TARGET ]=="
+    echo "  Building..."
     mkdir -p out/binutils
     cd out/binutils
     ../../ext/binutils-mrisc32/configure \
-        --prefix="$INSTALL_ROOT" \
+        --prefix="$PREFIX" \
         --target="$TARGET" \
         --with-system-zlib \
         --disable-gdb \
         --disable-sim \
         > configure.log 2>&1
     make all > build.log 2>&1
+    echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
+    echo ""
 fi
 
 # Build bootstrap gcc.
 if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
-    echo "====> Building bootstrap GCC"
+    echo "==[ Bootstrap (minimal) GCC - $TARGET ]=="
+    echo "  Building..."
     mkdir -p out/gcc-bootstrap
     cd out/gcc-bootstrap
     ../../ext/gcc-mrisc32/configure \
-      --prefix="$INSTALL_ROOT" \
+      --prefix="$PREFIX" \
       --target="$TARGET" \
       --enable-languages=c \
       --without-headers \
@@ -148,31 +175,37 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
       --with-gnu-ld \
       > configure.log 2>&1
     make -j20 all-gcc > build.log 2>&1
+    echo "  Installing (temporary)..."
     make install-gcc > install.log 2>&1
     cd ../..
+    echo ""
 fi
 
 # Build newlib.
 if [ "$BUILD_NEWLIB" == "yes" ] ; then
-    echo "====> Building newlib"
+    echo "==[ newlib - $TARGET ]=="
+    echo "  Building..."
     mkdir -p out/newlib
     cd out/newlib
     ../../ext/newlib-mrisc32/configure \
-      --prefix="$INSTALL_ROOT" \
+      --prefix="$PREFIX" \
       --target="$TARGET" \
       > configure.log 2>&1
     make -j20 all > build.log 2>&1
+    echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
+    echo ""
 fi
 
 # Build gcc with newlib.
 if [ "$BUILD_GCC" == "yes" ] ; then
-    echo "====> Building GCC"
+    echo "==[ GCC - $TARGET ]=="
+    echo "  Building..."
     mkdir -p out/gcc
     cd out/gcc
     ../../ext/gcc-mrisc32/configure \
-      --prefix="$INSTALL_ROOT" \
+      --prefix="$PREFIX" \
       --target="$TARGET" \
       --enable-languages=c \
       --with-newlib \
@@ -182,16 +215,11 @@ if [ "$BUILD_GCC" == "yes" ] ; then
       --disable-libssp \
       > configure.log 2>&1
     make -j20 all > build.log 2>&1
+    echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
+    echo ""
 fi
 
-# Pack it all into a tar file.
-echo "====> Creating tarball"
-cd out/install
-tar -caf ../mrisc32-gnu-toolchain.tar.gz ./*
-cd ../..
-
-
-echo "Completed successfuly!"
+echo "Build and installation finished succesfully!"
 
