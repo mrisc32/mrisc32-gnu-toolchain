@@ -34,7 +34,7 @@ function help {
     echo ""
     echo "Options:"
     echo "  --prefix=PATH  Set installation path (default: $HOME/.local)"
-    echo "  -c, --clean    Clean the build directories"
+    echo "  -c, --clean    Clean the build directories before building"
     echo "  -u, --update   Update the Git submodules"
     echo "  -h, --help     Show this text"
     echo ""
@@ -121,11 +121,8 @@ if [ "$DO_UPDATE" == "yes" ] ; then
     git submodule update --init --recursive
 fi
 
-# Clean all the build results.
+# Make sure that we have an output folder.
 mkdir -p out
-if [ "$DO_CLEAN" == "yes" ] ; then
-    rm -rf out/*
-fi
 
 # Create the install root ($PREFIX), and make sure that it's the first in our
 # PATH during installation.
@@ -142,6 +139,10 @@ TARGET=mrisc32-elf
 # Build binutils.
 if [ "$BUILD_BINUTILS" == "yes" ] ; then
     echo "==[ binutils - $TARGET ]=="
+    if [ "$DO_CLEAN" == "yes" ] ; then
+        echo "  Cleaning..."
+        rm -rf out/binutils
+    fi
     echo "  Building..."
     mkdir -p out/binutils
     cd out/binutils
@@ -162,6 +163,10 @@ fi
 # Build bootstrap gcc.
 if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
     echo "==[ Bootstrap (minimal) GCC - $TARGET ]=="
+    if [ "$DO_CLEAN" == "yes" ] ; then
+        echo "  Cleaning..."
+        rm -rf out/gcc-bootstrap
+    fi
     echo "  Building..."
     mkdir -p out/gcc-bootstrap
     cd out/gcc-bootstrap
@@ -184,6 +189,10 @@ fi
 # Build newlib.
 if [ "$BUILD_NEWLIB" == "yes" ] ; then
     echo "==[ newlib - $TARGET ]=="
+    if [ "$DO_CLEAN" == "yes" ] ; then
+        echo "  Cleaning..."
+        rm -rf out/newlib
+    fi
     echo "  Building..."
     mkdir -p out/newlib
     cd out/newlib
@@ -201,13 +210,17 @@ fi
 # Build gcc with newlib.
 if [ "$BUILD_GCC" == "yes" ] ; then
     echo "==[ GCC - $TARGET ]=="
+    if [ "$DO_CLEAN" == "yes" ] ; then
+        echo "  Cleaning..."
+        rm -rf out/gcc
+    fi
     echo "  Building..."
     mkdir -p out/gcc
     cd out/gcc
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
       --target="$TARGET" \
-      --enable-languages=c \
+      --enable-languages=c,c++,d \
       --with-newlib \
       --with-gnu-as \
       --with-gnu-ld \
