@@ -179,7 +179,7 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
       --with-gnu-as \
       --with-gnu-ld \
       > configure.log 2>&1
-    make -j20 all-gcc > build.log 2>&1
+    make -j28 all-gcc > build.log 2>&1
     echo "  Installing (temporary)..."
     make install-gcc > install.log 2>&1
     cd ../..
@@ -200,7 +200,7 @@ if [ "$BUILD_NEWLIB" == "yes" ] ; then
       --prefix="$PREFIX" \
       --target="$TARGET" \
       > configure.log 2>&1
-    make -j20 all > build.log 2>&1
+    make -j28 all > build.log 2>&1
     echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
@@ -227,7 +227,7 @@ if [ "$BUILD_GCC" == "yes" ] ; then
       --disable-shared \
       --disable-libssp \
       > configure.log 2>&1
-    make -j20 all > build.log 2>&1
+    make -j28 all > build.log 2>&1
     echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
