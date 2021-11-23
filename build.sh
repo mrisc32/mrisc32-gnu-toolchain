@@ -258,5 +258,16 @@ if [ "$BUILD_GCC" == "yes" ] ; then
     echo ""
 fi
 
+# Strip binaries.
+echo "Stripping binaries..."
+find "${PREFIX}/bin" -executable -type f -exec strip {} \;
+find "${PREFIX}/libexec/gcc" -name 'cc1*' -executable -type f -exec strip {} \;
+find "${PREFIX}/libexec/gcc" -name 'lto-wrapper' -executable -type f -exec strip {} \;
+find "${PREFIX}/libexec/gcc" -name 'collect2' -executable -type f -exec strip {} \;
+find "${PREFIX}/libexec/gcc" -name 'd21' -executable -type f -exec strip {} \;
+find "${PREFIX}/libexec/gcc" -name 'lto1' -executable -type f -exec strip {} \;
+find "${PREFIX}/${TARGET}/bin" -executable -type f -exec strip {} \;
+echo ""
+
 echo "Build and installation finished succesfully!"
 
