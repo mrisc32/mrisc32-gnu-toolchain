@@ -36,6 +36,7 @@ function help {
     echo "  --prefix=PATH  Set installation path (default: $HOME/.local)"
     echo "  -c, --clean    Clean the build directories before building"
     echo "  -u, --update   Update the Git submodules"
+    echo "  -jN            Use N parallel processes (note: no space)"
     echo "  -h, --help     Show this text"
     echo ""
     echo "Component:"
@@ -57,6 +58,7 @@ BUILD_BINUTILS=yes
 BUILD_BOOTSTRAP=yes
 BUILD_NEWLIB=yes
 BUILD_GCC=yes
+NUM_PROCESSES=""
 for arg in "$@" ; do
     case $arg in
         -h|--help)
@@ -68,6 +70,9 @@ for arg in "$@" ; do
             ;;
         -u|--update)
             DO_UPDATE=yes
+            ;;
+        -j*)
+            NUM_PROCESSES="${arg:2}"
             ;;
         --prefix=*)
             PREFIX="${arg#*=}"
@@ -112,6 +117,17 @@ done
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$SCRIPT_DIR"
+
+# Determine number of parallel processes.
+if [ -z "${NUM_PROCESSES}" ] ; then
+    NUM_PROCESSES=$(getconf -a | grep NPROCESSORS_ONLN | head -1 | awk '{print $2}')
+    if [ -z "${NUM_PROCESSES}" ]; then
+        NUM_PROCESSES = 8
+    fi
+    ((NUM_PROCESSES=$NUM_PROCESSES+1))
+fi
+echo "INFO: Using ${NUM_PROCESSES} parallel processes where possible"
+echo ""
 
 # Check dependencies.
 # TODO(m): Implement me!
@@ -183,7 +199,7 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
       --with-gnu-as \
       --with-gnu-ld \
       > configure.log 2>&1
-    make -j28 all-gcc > build.log 2>&1
+    make -j${NUM_PROCESSES} all-gcc > build.log 2>&1
     echo "  Installing (temporary)..."
     make install-gcc > install.log 2>&1
     cd ../..
@@ -204,7 +220,7 @@ if [ "$BUILD_NEWLIB" == "yes" ] ; then
       --prefix="$PREFIX" \
       --target="$TARGET" \
       > configure.log 2>&1
-    make -j28 all > build.log 2>&1
+    make -j${NUM_PROCESSES} all > build.log 2>&1
     echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
@@ -235,7 +251,7 @@ if [ "$BUILD_GCC" == "yes" ] ; then
       --disable-shared \
       --disable-libssp \
       > configure.log 2>&1
-    make -j28 all > build.log 2>&1
+    make -j${NUM_PROCESSES} all > build.log 2>&1
     echo "  Installing..."
     make install > install.log 2>&1
     cd ../..
