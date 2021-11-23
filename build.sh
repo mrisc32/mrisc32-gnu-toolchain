@@ -143,8 +143,8 @@ if [ "$BUILD_BINUTILS" == "yes" ] ; then
         echo "  Cleaning..."
         rm -rf out/binutils
     fi
-    echo "  Building..."
     mkdir -p out/binutils
+    echo "  Building..."
     cd out/binutils
     ../../ext/binutils-mrisc32/configure \
         --prefix="$PREFIX" \
@@ -167,8 +167,12 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
         echo "  Cleaning..."
         rm -rf out/gcc-bootstrap
     fi
-    echo "  Building..."
     mkdir -p out/gcc-bootstrap
+    echo "  Downloading prerequisites..."
+    cd ext/gcc-mrisc32
+    ./contrib/download_prerequisites > ../../out/gcc-bootstrap/prerequisites.log 2>&1
+    cd ../..
+    echo "  Building..."
     cd out/gcc-bootstrap
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
@@ -193,8 +197,8 @@ if [ "$BUILD_NEWLIB" == "yes" ] ; then
         echo "  Cleaning..."
         rm -rf out/newlib
     fi
-    echo "  Building..."
     mkdir -p out/newlib
+    echo "  Building..."
     cd out/newlib
     ../../ext/newlib-mrisc32/configure \
       --prefix="$PREFIX" \
@@ -214,8 +218,12 @@ if [ "$BUILD_GCC" == "yes" ] ; then
         echo "  Cleaning..."
         rm -rf out/gcc
     fi
-    echo "  Building..."
     mkdir -p out/gcc
+    echo "  Downloading prerequisites..."
+    cd ext/gcc-mrisc32
+    ./contrib/download_prerequisites > ../../out/gcc/prerequisites.log 2>&1
+    cd ../..
+    echo "  Building..."
     cd out/gcc
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
