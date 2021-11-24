@@ -2,16 +2,22 @@
 
 This is a top level repository for building the MRISC32 toolchain.
 
+# Pre-built binaries
+
+The latest pre-built version of the toolchain can be found [here](https://github.com/mrisc32/mrisc32-gnu-toolchain/releases/latest).
+
+# Building yourself
+
 Currently there are two methods for building the toolchain:
 
 1. Natively on your host machine (recommended).
 2. Using Docker.
 
-# Host build
+## Host build
 
 The build has only been tested on Ubuntu 20.04, but may work on other similar systems too.
 
-## Prerequities
+### Prerequities
 
 The following packages are required:
 
@@ -19,7 +25,7 @@ The following packages are required:
 sudo apt install bison build-essential curl flex texinfo zlib1g-dev
 ```
 
-## Building
+### Building
 
 To build and install the GNU toolchain for MRISC32, do:
 
@@ -34,15 +40,15 @@ For more options, see:
 ./build.sh --help
 ```
 
-# Docker build
+## Docker build
 
 The Docker based build will produce a toolchain for Linux hosts.
 
-## Prerequities
+### Prerequities
 
 Install Docker.
 
-## Building
+### Building
 
 To build the GNU toolchain for MRISC32, do:
 
