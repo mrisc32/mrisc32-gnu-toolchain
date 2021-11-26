@@ -20,7 +20,13 @@ jobs:
       - name: Build Toolchain
         run: |
           ./build-in-docker.sh
+
+      - name: Create archive
+        run: |
           mv out/install mrisc32-gnu-toolchain
+          cp ext/binutils-mrisc32/COPYING* mrisc32-gnu-toolchain/
+          cp ext/newlib-mrisc32/COPYING* mrisc32-gnu-toolchain/
+          cp ext/gcc-mrisc32/COPYING* mrisc32-gnu-toolchain/
           tar -cvzf mrisc32-gnu-toolchain-linux-amd64.tar.gz mrisc32-gnu-toolchain
 
       - name: Upload
