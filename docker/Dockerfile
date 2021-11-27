@@ -7,6 +7,5 @@ RUN apt-get update \
        curl \
        flex \
        texinfo \
-       zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 

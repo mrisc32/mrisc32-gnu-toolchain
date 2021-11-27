@@ -165,7 +165,6 @@ if [ "$BUILD_BINUTILS" == "yes" ] ; then
     ../../ext/binutils-mrisc32/configure \
         --prefix="$PREFIX" \
         --target="$TARGET" \
-        --with-system-zlib \
         --disable-gdb \
         --disable-sim \
         > configure.log 2>&1
