@@ -120,7 +120,7 @@ cd "$SCRIPT_DIR"
 
 # Determine number of parallel processes.
 if [ -z "${NUM_PROCESSES}" ] ; then
-    NUM_PROCESSES=$(getconf -a | grep NPROCESSORS_ONLN | head -1 | awk '{print $2}')
+    NUM_PROCESSES=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 8)
     if [ -z "${NUM_PROCESSES}" ]; then
         NUM_PROCESSES = 8
     fi
