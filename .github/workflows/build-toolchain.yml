@@ -10,30 +10,70 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Ubuntu 20.04 AMD64",
+            os: ubuntu-20.04,
+            build_env: "docker",
+            cc: "gcc",
+            cxx: "g++",
+            artifact: "mrisc32-gnu-toolchain-linux-amd64.tar.gz",
+            archive_type: "tar",
+          }
+        - {
+            name: "macOS Latest",
+            os: macos-latest,
+            build_env: "native",
+            cc: "clang",
+            cxx: "clang++",
+            artifact: "mrisc32-gnu-toolchain-macos.zip",
+            archive_type: "zip"
+          }
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - name: Build Toolchain
+      - name: Build toolchain (with Docker)
+        if: ${{ matrix.config.build_env == 'docker' }}
         run: |
           ./build-in-docker.sh
 
-      - name: Create archive
+      - name: Build toolchain (native)
+        if: ${{ matrix.config.build_env == 'native' }}
+        run: |
+          mkdir -p out/install
+          ./build.sh --prefix=${PWD}/out/install --clean
+
+      - name: Prepare archive content
         run: |
           mv out/install mrisc32-gnu-toolchain
           cp ext/binutils-mrisc32/COPYING* mrisc32-gnu-toolchain/
           cp ext/newlib-mrisc32/COPYING* mrisc32-gnu-toolchain/
           cp ext/gcc-mrisc32/COPYING* mrisc32-gnu-toolchain/
-          tar -cvzf mrisc32-gnu-toolchain-linux-amd64.tar.gz mrisc32-gnu-toolchain
+
+      - name: Pack tar archive
+        if: ${{ matrix.config.archive_type == 'tar' }}
+        run: |
+          tar -cvzf ${{ matrix.config.artifact }} mrisc32-gnu-toolchain
+
+      - name: Pack zip archive
+        if: ${{ matrix.config.archive_type == 'zip' }}
+        run: |
+          7z a -tzip -mx=9 ${{ matrix.config.artifact }} mrisc32-gnu-toolchain
 
       - name: Upload
         uses: actions/upload-artifact@v1
         with:
-          path: mrisc32-gnu-toolchain-linux-amd64.tar.gz
-          name: mrisc32-gnu-toolchain-linux-amd64.tar.gz
+          path: ${{ matrix.config.artifact }}
+          name: ${{ matrix.config.artifact }}
 
   release:
     if: contains(github.ref, 'tags/v')
@@ -63,14 +103,29 @@ jobs:
 
   publish:
     if: contains(github.ref, 'tags/v')
+    name: ${{ matrix.config.name }}
     runs-on: ubuntu-20.04
     needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Ubuntu 20.04 AMD64",
+            artifact: "mrisc32-gnu-toolchain-linux-amd64.tar.gz",
+            artifact_content_type: "application/x-tar",
+          }
+        - {
+            name: "macOS Latest",
+            artifact: "mrisc32-gnu-toolchain-macos.zip",
+            artifact_content_type: "application/zip",
+          }
 
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v1
       with:
-        name: mrisc32-gnu-toolchain-linux-amd64.tar.gz
+        name: ${{ matrix.config.artifact }}
         path: ./
 
     - name: Download URL
@@ -89,6 +144,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-        asset_path: mrisc32-gnu-toolchain-linux-amd64.tar.gz
-        asset_name: mrisc32-gnu-toolchain-linux-amd64.tar.gz
-        asset_content_type: application/x-tar
+        asset_path: ${{ matrix.config.artifact }}
+        asset_name: ${{ matrix.config.artifact }}
+        asset_content_type: ${{ matrix.config.artifact_content_type }}
