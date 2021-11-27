@@ -23,6 +23,11 @@
 
 err_report() {
     echo "*** Failed to build: Stopped on line $1"
+    if [ -n "${LATEST_LOG}" ] ; then
+        echo ""
+        echo "Latest log:"
+        cat "${LATEST_LOG}"
+    fi
 }
 trap 'err_report $LINENO' ERR
 set -e
@@ -160,17 +165,24 @@ if [ "$BUILD_BINUTILS" == "yes" ] ; then
         rm -rf out/binutils
     fi
     mkdir -p out/binutils
-    echo "  Building..."
+
+    echo "  Configuring..."
     cd out/binutils
+    LATEST_LOG=${PWD}/configure.log
     ../../ext/binutils-mrisc32/configure \
         --prefix="$PREFIX" \
         --target="$TARGET" \
         --disable-gdb \
         --disable-sim \
-        > configure.log 2>&1
-    make all > build.log 2>&1
+        > "${LATEST_LOG}" 2>&1
+
+    echo "  Building..."
+    LATEST_LOG=${PWD}/build.log
+    make all > "${LATEST_LOG}" 2>&1
+
     echo "  Installing..."
-    make install > install.log 2>&1
+    LATEST_LOG=${PWD}/install.log
+    make install > "${LATEST_LOG}" 2>&1
     cd ../..
     echo ""
 fi
@@ -187,8 +199,10 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
     cd ext/gcc-mrisc32
     ./contrib/download_prerequisites > ../../out/gcc-bootstrap/prerequisites.log 2>&1
     cd ../..
-    echo "  Building..."
+
+    echo "  Configuring..."
     cd out/gcc-bootstrap
+    LATEST_LOG=${PWD}/configure.log
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
       --target="$TARGET" \
@@ -197,10 +211,15 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
       --with-newlib \
       --with-gnu-as \
       --with-gnu-ld \
-      > configure.log 2>&1
-    make -j${NUM_PROCESSES} all-gcc > build.log 2>&1
+      > "${LATEST_LOG}" 2>&1
+
+    echo "  Building..."
+    LATEST_LOG=${PWD}/build.log
+    make -j${NUM_PROCESSES} all-gcc > "${LATEST_LOG}" 2>&1
+
     echo "  Installing (temporary)..."
-    make install-gcc > install.log 2>&1
+    LATEST_LOG=${PWD}/install.log
+    make install-gcc > "${LATEST_LOG}" 2>&1
     cd ../..
     echo ""
 fi
@@ -213,15 +232,22 @@ if [ "$BUILD_NEWLIB" == "yes" ] ; then
         rm -rf out/newlib
     fi
     mkdir -p out/newlib
-    echo "  Building..."
+
+    echo "  Configuring..."
     cd out/newlib
+    LATEST_LOG=${PWD}/configure.log
     ../../ext/newlib-mrisc32/configure \
       --prefix="$PREFIX" \
       --target="$TARGET" \
-      > configure.log 2>&1
-    make -j${NUM_PROCESSES} all > build.log 2>&1
+      > "${LATEST_LOG}" 2>&1
+
+    echo "  Building..."
+    LATEST_LOG=${PWD}/build.log
+    make -j${NUM_PROCESSES} all > "${LATEST_LOG}" 2>&1
+
     echo "  Installing..."
-    make install > install.log 2>&1
+    LATEST_LOG=${PWD}/install.log
+    make install > "${LATEST_LOG}" 2>&1
     cd ../..
     echo ""
 fi
@@ -238,7 +264,9 @@ if [ "$BUILD_GCC" == "yes" ] ; then
     cd ext/gcc-mrisc32
     ./contrib/download_prerequisites > ../../out/gcc/prerequisites.log 2>&1
     cd ../..
-    echo "  Building..."
+
+    echo "  Configuring..."
+    LATEST_LOG=${PWD}/configure.log
     cd out/gcc
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
@@ -249,10 +277,15 @@ if [ "$BUILD_GCC" == "yes" ] ; then
       --with-gnu-ld \
       --disable-shared \
       --disable-libssp \
-      > configure.log 2>&1
-    make -j${NUM_PROCESSES} all > build.log 2>&1
+      > "${LATEST_LOG}" 2>&1
+
+    echo "  Building..."
+    LATEST_LOG=${PWD}/build.log
+    make -j${NUM_PROCESSES} all > "${LATEST_LOG}" 2>&1
+
     echo "  Installing..."
-    make install > install.log 2>&1
+    LATEST_LOG=${PWD}/install.log
+    make install > "${LATEST_LOG}" 2>&1
     cd ../..
     echo ""
 fi
