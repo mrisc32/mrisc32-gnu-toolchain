@@ -266,8 +266,8 @@ if [ "$BUILD_GCC" == "yes" ] ; then
     cd ../..
 
     echo "  Configuring..."
-    LATEST_LOG=${PWD}/configure.log
     cd out/gcc
+    LATEST_LOG=${PWD}/configure.log
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
       --target="$TARGET" \
