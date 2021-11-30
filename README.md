@@ -6,6 +6,17 @@ This is a top level repository for building the MRISC32 toolchain.
 
 The latest pre-built version of the toolchain can be found [here](https://github.com/mrisc32/mrisc32-gnu-toolchain/releases/latest).
 
+Binaries are available for:
+
+* Linux (x86_64)
+* macOS (x86_64)
+* Windows (x86_64)
+
+## Installation
+
+1. Unpack the archive to a location of your choice.
+2. Add `path/to/mrisc32-gnu-toolchain/bin` to your `PATH` environment variable (e.g. in `$HOME/.bashrc` on Linux).
+
 # Building yourself
 
 Currently there are two methods for building the toolchain:
@@ -15,19 +26,19 @@ Currently there are two methods for building the toolchain:
 
 ## Host build
 
-The build has only been tested on Ubuntu 20.04, but may work on other similar systems too.
+The build has been tested on Ubuntu 20.04 (with GCC), macOS (with clang) and Windows (with MSYS2 and MinGW), but may work on other similar systems too.
 
 ### Prerequities
 
-The following packages are required:
+The following packages are required (example given for Ubuntu):
 
 ```bash
-sudo apt install bison build-essential curl flex texinfo zlib1g-dev
+sudo apt install bison build-essential curl flex texinfo
 ```
 
 ### Building
 
-To build and install the GNU toolchain for MRISC32, do:
+To build and install the GNU toolchain for MRISC32, do (example given for Ubuntu):
 
 ```bash
 git submodule update --init --recursive

@@ -277,6 +277,7 @@ if [ "$BUILD_GCC" == "yes" ] ; then
       --with-gnu-ld \
       --disable-shared \
       --disable-libssp \
+      --disable-libstdcxx-pch \
       > "${LATEST_LOG}" 2>&1
 
     echo "  Building..."

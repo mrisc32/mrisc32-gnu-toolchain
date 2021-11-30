@@ -21,6 +21,37 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ##############################################################################
 
+function help {
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Build the MRISC32 GNU toolchain inside a Docker container."
+    echo ""
+    echo "Options:"
+    echo "  --arch=ARCH  Set the docker architecture (default: amd64)"
+    echo "  -h, --help   Show this text"
+    echo ""
+    echo "Valid values for ARCH: amd64, arm64v8, arm32v7"
+}
+
+# Parse arguments.
+ARCH=amd64
+for arg in "$@" ; do
+    case $arg in
+        -h|--help)
+            help
+            exit 0
+            ;;
+        --arch=*)
+            ARCH="${arg#*=}"
+            ;;
+        *)
+            echo "*** Invalid argument: $arg"
+            help
+            exit 1
+            ;;
+    esac
+done
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Set up the installation folder.
@@ -29,8 +60,14 @@ _install_dir_host=${SCRIPT_DIR}/out/install
 mkdir -p "${_install_dir_host}"
 
 # Build the docker image.
-_container_name=mrisc32-gnu-toolchain-builder
-docker build -q -t ${_container_name} ${SCRIPT_DIR}/docker
+_container_name=mrisc32-gnu-toolchain-builder-${ARCH/\//-}
+echo "Building the container ${_container_name}"
+docker build \
+    -q \
+    -t ${_container_name} \
+    --build-arg _cpu_arch="${ARCH}" \
+    ${SCRIPT_DIR}/docker
+echo ""
 
 # Run the build inside the container.
 _uid=$(id -u)
@@ -41,6 +78,11 @@ docker run \
     -v "${_install_dir_host}":"${_install_dir}" \
     -v "${SCRIPT_DIR}":/work \
     -w /work \
+    -e CC="${CC:-cc}" \
+    -e CXX="${CXX:-c++}" \
+    -e CFLAGS="${CFLAGS:--O2}" \
+    -e CXXFLAGS="${CXXFLAGS:--O2}" \
+    -e LDFLAGS="${LDFLAGS:-}" \
     ${_container_name} \
     ./build.sh --prefix="${_install_dir}" --clean
 

@@ -12,27 +12,52 @@ jobs:
   build:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.config.shell }}
+
     strategy:
       fail-fast: false
       matrix:
         config:
         - {
-            name: "Ubuntu 20.04 AMD64",
+            name: "Ubuntu 20.04 x86_64",
             os: ubuntu-20.04,
-            build_env: "docker",
+            shell: "bash",
+            build_type: "docker",
             cc: "gcc",
             cxx: "g++",
-            artifact: "mrisc32-gnu-toolchain-linux-amd64.tar.gz",
+            cflags: "-O2",
+            cxxflags: "-O2",
+            ldflags: "",
+            artifact: "mrisc32-gnu-toolchain-linux-x86_64.tar.gz",
             archive_type: "tar",
           }
         - {
-            name: "macOS Latest",
+            name: "macOS x86_64",
             os: macos-latest,
-            build_env: "native",
+            shell: "bash",
+            build_type: "native",
             cc: "clang",
             cxx: "clang++",
-            artifact: "mrisc32-gnu-toolchain-macos.zip",
-            archive_type: "zip"
+            cflags: "-O2",
+            cxxflags: "-O2",
+            ldflags: "",
+            artifact: "mrisc32-gnu-toolchain-macos-x86_64.zip",
+            archive_type: "zip",
+          }
+        - {
+            name: "Windows x86_64",
+            os: windows-latest,
+            shell: 'msys2 {0}',
+            build_type: "native",
+            cc: "x86_64-w64-mingw32-gcc",
+            cxx: "x86_64-w64-mingw32-g++",
+            cflags: "-O2",
+            cxxflags: "-O2",
+            ldflags: "-static -static-libgcc -static-libstdc++",
+            artifact: "mrisc32-gnu-toolchain-win-x86_64.zip",
+            archive_type: "zip",
           }
 
     steps:
@@ -41,47 +66,72 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build toolchain (with Docker)
-        if: ${{ matrix.config.build_env == 'docker' }}
-        run: |
-          ./build-in-docker.sh
+      - name: Set up MSYS2 & MinGW
+        if: ${{ runner.os == 'Windows' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          location: D:\
+          install: >-
+            mingw-w64-x86_64-gcc mingw-w64-x86_64-pkg-config
+            autoconf automake bison bzip2 curl dos2unix flex
+            gawk gzip libzstd-devel make p7zip perl tar texinfo
 
-      - name: Build toolchain (native)
-        if: ${{ matrix.config.build_env == 'native' }}
+      - name: Build toolchain
+        env:
+          CC: "${{ matrix.config.cc }}"
+          CXX: "${{ matrix.config.cxx }}"
+          CFLAGS: "${{ matrix.config.cflags }}"
+          CXXFLAGS: "${{ matrix.config.cxxflags }}"
+          LDFLAGS: "${{ matrix.config.ldflags }}"
         run: |
-          mkdir -p out/install
-          ./build.sh --prefix=${PWD}/out/install --clean
+          # Fix texi CR/LF issues ("...table requires an argument...").
+          if [ "${{ runner.os }}" == "Windows" ] ; then
+            find ./ext -iname "*.texi" -exec dos2unix -q '{}' \;
+          fi
 
-      - name: Prepare archive content
+          if [ "${{ matrix.config.build_type }}" == "docker" ] ; then
+            ./build-in-docker.sh
+          else
+            mkdir -p out/install
+            ./build.sh --prefix=${PWD}/out/install --clean
+          fi
+
+      - name: Pack archive
         run: |
           mv out/install mrisc32-gnu-toolchain
+
+          # Add GPL license files.
           cp ext/binutils-mrisc32/COPYING* mrisc32-gnu-toolchain/
           cp ext/newlib-mrisc32/COPYING* mrisc32-gnu-toolchain/
           cp ext/gcc-mrisc32/COPYING* mrisc32-gnu-toolchain/
 
-      - name: Pack tar archive
-        if: ${{ matrix.config.archive_type == 'tar' }}
-        run: |
-          tar -cvzf ${{ matrix.config.artifact }} mrisc32-gnu-toolchain
+          # Add required DLLs for Windows builds.
+          if [ "${{ runner.os }}" == "Windows" ] ; then
+            cp /d/msys64/mingw64/bin/libiconv-*.dll mrisc32-gnu-toolchain/bin/
+            cp /d/msys64/mingw64/bin/libcharset-*.dll mrisc32-gnu-toolchain/bin/
+          fi
 
-      - name: Pack zip archive
-        if: ${{ matrix.config.archive_type == 'zip' }}
-        run: |
-          7z a -tzip -mx=9 ${{ matrix.config.artifact }} mrisc32-gnu-toolchain
+          if [ "${{ matrix.config.archive_type }}" == "tar" ] ; then
+            tar -cv -I "gzip -9" -f ${{ matrix.config.artifact }} mrisc32-gnu-toolchain
+          else
+            7z a -tzip -mx=9 ${{ matrix.config.artifact }} mrisc32-gnu-toolchain
+          fi
 
-      - name: Upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
           path: ${{ matrix.config.artifact }}
           name: ${{ matrix.config.artifact }}
 
   release:
+    name: Release
     if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-20.04
     needs: build
 
     steps:
-      - name: Create Release
+      - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -92,32 +142,39 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Store Release url
+      - name: Store release URL
         run: |
           echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
 
-      - uses: actions/upload-artifact@v1
+      - name: Upload release URL
+        uses: actions/upload-artifact@v1
         with:
           path: ./upload_url
           name: upload_url
 
   publish:
-    if: contains(github.ref, 'tags/v')
     name: ${{ matrix.config.name }}
+    if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-20.04
     needs: release
+
     strategy:
       fail-fast: false
       matrix:
         config:
         - {
-            name: "Ubuntu 20.04 AMD64",
-            artifact: "mrisc32-gnu-toolchain-linux-amd64.tar.gz",
+            name: "Ubuntu 20.04 x86_64",
+            artifact: "mrisc32-gnu-toolchain-linux-x86_64.tar.gz",
             artifact_content_type: "application/x-tar",
           }
         - {
-            name: "macOS Latest",
-            artifact: "mrisc32-gnu-toolchain-macos.zip",
+            name: "macOS x86_64",
+            artifact: "mrisc32-gnu-toolchain-macos-x86_64.zip",
+            artifact_content_type: "application/zip",
+          }
+        - {
+            name: "Windows x86_64",
+            artifact: "mrisc32-gnu-toolchain-win-x86_64.zip",
             artifact_content_type: "application/zip",
           }
 
@@ -128,16 +185,19 @@ jobs:
         name: ${{ matrix.config.artifact }}
         path: ./
 
-    - name: Download URL
+    - name: Download release URL
       uses: actions/download-artifact@v1
       with:
         name: upload_url
         path: ./
-    - id: set_upload_url
+
+    - name: Set upload URL
+      id: set_upload_url
       run: |
         upload_url=`cat ./upload_url`
         echo ::set-output name=upload_url::$upload_url
-    - name: Upload to Release
+
+    - name: Upload artifact to release
       id: upload_to_release
       uses: actions/upload-release-asset@v1.0.1
       env:
