@@ -211,6 +211,7 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
       --with-newlib \
       --with-gnu-as \
       --with-gnu-ld \
+      --without-zstd \
       > "${LATEST_LOG}" 2>&1
 
     echo "  Building..."
@@ -278,6 +279,7 @@ if [ "$BUILD_GCC" == "yes" ] ; then
       --disable-shared \
       --disable-libssp \
       --disable-libstdcxx-pch \
+      --without-zstd \
       > "${LATEST_LOG}" 2>&1
 
     echo "  Building..."
