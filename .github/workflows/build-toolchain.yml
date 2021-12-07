@@ -34,16 +34,16 @@ jobs:
             archive_type: "tar",
           }
         - {
-            name: "macOS x86_64",
+            name: "macOS arm64 + x86_64",
             os: macos-latest,
             shell: "bash",
             build_type: "native",
             cc: "clang",
             cxx: "clang++",
-            cflags: "-O2",
-            cxxflags: "-O2",
+            cflags: "-O2 -arch x86_64 -arch arm64",
+            cxxflags: "-O2 -arch x86_64 -arch arm64",
             ldflags: "",
-            artifact: "mrisc32-gnu-toolchain-macos-x86_64.zip",
+            artifact: "mrisc32-gnu-toolchain-macos.zip",
             archive_type: "zip",
           }
         - {
@@ -168,8 +168,8 @@ jobs:
             artifact_content_type: "application/x-tar",
           }
         - {
-            name: "macOS x86_64",
-            artifact: "mrisc32-gnu-toolchain-macos-x86_64.zip",
+            name: "macOS arm64 + x86_64",
+            artifact: "mrisc32-gnu-toolchain-macos.zip",
             artifact_content_type: "application/zip",
           }
         - {

@@ -9,7 +9,7 @@ The latest pre-built version of the toolchain can be found [here](https://github
 Binaries are available for:
 
 * Linux (x86_64)
-* macOS (x86_64)
+* macOS (arm64 + x86_64)
 * Windows (x86_64)
 
 ## Installation
