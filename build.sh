@@ -272,7 +272,7 @@ if [ "$BUILD_GCC" == "yes" ] ; then
     ../../ext/gcc-mrisc32/configure \
       --prefix="$PREFIX" \
       --target="$TARGET" \
-      --enable-languages=c,c++,d \
+      --enable-languages=c,c++ \
       --with-newlib \
       --with-gnu-as \
       --with-gnu-ld \
