@@ -178,7 +178,13 @@ if [ "$BUILD_BINUTILS" == "yes" ] ; then
 
     echo "  Building..."
     LATEST_LOG=${PWD}/build.log
-    make all > "${LATEST_LOG}" 2>&1
+    MAKE_FLAGS=""
+    if [ "$DO_CLEAN" == "yes" ] ; then
+        # We only allow parallel make for clean builds, as it seems to cause problems for
+        # incremental builds.
+        MAKE_FLAGS=-j${NUM_PROCESSES}
+    fi
+    make ${MAKE_FLAGS} all > "${LATEST_LOG}" 2>&1
 
     echo "  Installing..."
     LATEST_LOG=${PWD}/install.log
@@ -216,7 +222,7 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
 
     echo "  Building..."
     LATEST_LOG=${PWD}/build.log
-    make -j${NUM_PROCESSES} all-gcc > "${LATEST_LOG}" 2>&1
+    make -j"${NUM_PROCESSES}" all-gcc > "${LATEST_LOG}" 2>&1
 
     echo "  Installing (temporary)..."
     LATEST_LOG=${PWD}/install.log
@@ -244,7 +250,7 @@ if [ "$BUILD_NEWLIB" == "yes" ] ; then
 
     echo "  Building..."
     LATEST_LOG=${PWD}/build.log
-    make -j${NUM_PROCESSES} all > "${LATEST_LOG}" 2>&1
+    make -j"${NUM_PROCESSES}" all > "${LATEST_LOG}" 2>&1
 
     echo "  Installing..."
     LATEST_LOG=${PWD}/install.log
@@ -284,7 +290,7 @@ if [ "$BUILD_GCC" == "yes" ] ; then
 
     echo "  Building..."
     LATEST_LOG=${PWD}/build.log
-    make -j${NUM_PROCESSES} all > "${LATEST_LOG}" 2>&1
+    make -j"${NUM_PROCESSES}" all > "${LATEST_LOG}" 2>&1
 
     echo "  Installing..."
     LATEST_LOG=${PWD}/install.log
