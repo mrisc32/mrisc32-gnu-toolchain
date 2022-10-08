@@ -174,6 +174,7 @@ if [ "$BUILD_BINUTILS" == "yes" ] ; then
         --target="$TARGET" \
         --disable-gdb \
         --disable-sim \
+        --without-zstd \
         > "${LATEST_LOG}" 2>&1
 
     echo "  Building..."
