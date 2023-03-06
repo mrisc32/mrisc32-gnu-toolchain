@@ -77,6 +77,12 @@ jobs:
             autoconf automake bison bzip2 curl dos2unix flex
             gawk gzip libzstd-devel make p7zip perl tar texinfo
 
+      - name: Install macOS packages
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          brew update
+          brew install texinfo
+
       - name: Build toolchain
         env:
           CC: "${{ matrix.config.cc }}"
@@ -88,6 +94,12 @@ jobs:
           # Fix texi CR/LF issues ("...table requires an argument...").
           if [ "${{ runner.os }}" == "Windows" ] ; then
             find ./ext -iname "*.texi" -exec dos2unix -q '{}' \;
+          fi
+
+          # Override the antiquated system makeinfo on macOS with the one installed by brew.
+          # This solves build errors in the binutils/bfd documentation (2023-02-07).
+          if [ "${{ runner.os }}" == "macOS" ] ; then
+            export PATH="/usr/local/opt/texinfo/bin:$PATH"
           fi
 
           if [ "${{ matrix.config.build_type }}" == "docker" ] ; then
