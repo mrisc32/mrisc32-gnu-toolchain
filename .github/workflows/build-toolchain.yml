@@ -77,6 +77,12 @@ jobs:
             autoconf automake bison bzip2 curl dos2unix flex
             gawk gzip libzstd-devel make p7zip perl tar texinfo
 
+      - name: Install macOS packages
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          brew update
+          brew install texinfo
+
       - name: Build toolchain
         env:
           CC: "${{ matrix.config.cc }}"
@@ -89,6 +95,12 @@ jobs:
           if [ "${{ runner.os }}" == "Windows" ] ; then
             find ./ext -iname "*.texi" -exec dos2unix -q '{}' \;
           fi
+
+          # Override system makeinfo on macOS.
+          if [ "${{ runner.os }}" == "macOS" ] ; then
+            export PATH="/usr/local/opt/texinfo/bin:$PATH"
+          fi
+          makeinfo --version
 
           if [ "${{ matrix.config.build_type }}" == "docker" ] ; then
             ./build-in-docker.sh
