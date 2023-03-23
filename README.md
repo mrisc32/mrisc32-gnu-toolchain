@@ -9,8 +9,10 @@ The latest pre-built version of the toolchain can be found [here](https://github
 Binaries are available for:
 
 * Linux (x86_64)
-* macOS (arm64 + x86_64)
+* macOS (ARM64 + x86_64)
 * Windows (x86_64)
+
+Some releases also have pre-built versions for Linux ARM32 and/or ARM64 (e.g. for Raspberry Pi).
 
 ## Installation
 
