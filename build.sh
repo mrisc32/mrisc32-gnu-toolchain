@@ -204,7 +204,8 @@ if [ "$BUILD_BOOTSTRAP" == "yes" ] ; then
     mkdir -p out/gcc-bootstrap
     echo "  Downloading prerequisites..."
     cd ext/gcc-mrisc32
-    ./contrib/download_prerequisites > ../../out/gcc-bootstrap/prerequisites.log 2>&1
+    LATEST_LOG=../../out/gcc-bootstrap/prerequisites.log
+    ./contrib/download_prerequisites > "${LATEST_LOG}" 2>&1
     cd ../..
 
     echo "  Configuring..."
@@ -270,7 +271,8 @@ if [ "$BUILD_GCC" == "yes" ] ; then
     mkdir -p out/gcc
     echo "  Downloading prerequisites..."
     cd ext/gcc-mrisc32
-    ./contrib/download_prerequisites > ../../out/gcc/prerequisites.log 2>&1
+    LATEST_LOG=../../out/gcc/prerequisites.log
+    ./contrib/download_prerequisites > "${LATEST_LOG}" 2>&1
     cd ../..
 
     echo "  Configuring..."
