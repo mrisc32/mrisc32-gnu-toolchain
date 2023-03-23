@@ -1,6 +1,12 @@
 # MRISC32 GNU toolchain
 
-This is a top level repository for building the MRISC32 toolchain.
+This is a top level repository for building the MRISC32 GNU toolchain.
+
+The toolchain consists of:
+
+* C and C++ compilers ([GCC](https://gcc.gnu.org/))
+* Assembler, linker, ELF tools etc ([binutils](https://www.gnu.org/software/binutils/))
+* A standard C library ([newlib](https://sourceware.org/newlib/))
 
 # Pre-built binaries
 
