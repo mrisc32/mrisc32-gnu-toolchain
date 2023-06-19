@@ -4,6 +4,7 @@ FROM ${_cpu_arch}/ubuntu:20.04
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+       automake-1.15 \
        bison \
        build-essential \
        curl \
