@@ -1,3 +1,5 @@
+## This repo has moved to: https://gitlab.com/mrisc32/mrisc32-gnu-toolchain
+
 # MRISC32 GNU toolchain
 
 This is a top level repository for building the MRISC32 GNU toolchain.
